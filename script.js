@@ -1,31 +1,40 @@
 // ============================================
 // ÁGUA FÁCIL - SCRIPT COMPLETO
+// COM GRÁFICO, EXPORTAÇÃO, MAIS CULTURAS E TRADUÇÃO
 // ============================================
 
-// 1. Função que gera dados aleatórios (simula clima)
+// ============================================
+// 1. DADOS SIMULADOS (FALLBACK)
+// ============================================
+
 function gerarDadosFake() {
     let temperatura = Math.floor(Math.random() * (38 - 18 + 1) + 18);
     let umidade = Math.floor(Math.random() * (85 - 30 + 1) + 30);
     return { temp: temperatura, umid: umidade };
 }
 
-// 2. Função que calcula o VPD (sede do ar)
+// ============================================
+// 2. CÁLCULO DO VPD
+// ============================================
+
 function calcularVPD(temperatura, umidade) {
     let svp = 610.78 * Math.exp((17.2694 * temperatura) / (temperatura + 238.3));
     let vpd = ((100 - umidade) / 100) * svp / 1000;
     return Math.round(vpd * 100) / 100;
 }
 
-// 3. Função que estima o potencial de água na planta
+// ============================================
+// 3. COEFICIENTES DAS CULTURAS (ATUALIZADO)
+// ============================================
+
 function estimarPotencial(vpd, cultura, estadio, diasSemChuva) {
-    let coeficientes = {
-    milho: -0.35,
-    soja: -0.40,
-    tomate: -0.28,
-    cafe: -0.32,     // Café é sensível, mas tolera um pouco
-    laranja: -0.30,  // Citros são mais tolerantes
-    trigo: -0.38     // Trigo similar ao milho
+    const coeficientes = {
+    milho: -0.35, soja: -0.40, tomate: -0.28,
+    cafe: -0.32, abacaxi: -0.35, laranja: -0.30, trigo: -0.38,
+    cana: -0.33, eucalipto: -0.45, algodao: -0.42,
+    batata: -0.30
 };
+    
     let coeficiente = coeficientes[cultura] || -0.35;
     
     let fatorEstadio = 1.0;
@@ -34,12 +43,12 @@ function estimarPotencial(vpd, cultura, estadio, diasSemChuva) {
     if (estadio === 'frutificacao') fatorEstadio = 1.1;
     
     let fatorChuva = 1.0;
-if (diasSemChuva == 1) fatorChuva = 1.05;
-if (diasSemChuva == 3) fatorChuva = 1.2;
-if (diasSemChuva == 5) fatorChuva = 1.3;
-if (diasSemChuva == 7) fatorChuva = 1.4;
-if (diasSemChuva == 15) fatorChuva = 1.6;
-if (diasSemChuva == 30) fatorChuva = 1.9;
+    if (diasSemChuva == 1) fatorChuva = 1.05;
+    if (diasSemChuva == 3) fatorChuva = 1.2;
+    if (diasSemChuva == 5) fatorChuva = 1.3;
+    if (diasSemChuva == 7) fatorChuva = 1.4;
+    if (diasSemChuva == 15) fatorChuva = 1.6;
+    if (diasSemChuva == 30) fatorChuva = 1.9;
     
     let potencialBase = coeficiente * vpd - 0.15;
     let potencialFinal = potencialBase * (fatorChuva / fatorEstadio);
@@ -50,163 +59,106 @@ if (diasSemChuva == 30) fatorChuva = 1.9;
     return Math.round(potencialFinal * 100) / 100;
 }
 
-// 4. Função que gera alerta e recomendação
-function gerarAlerta(potencial) {
+// ============================================
+// 4. ALERTA E RECOMENDAÇÃO
+// ============================================
+
+function gerarAlerta(potencial, idioma = 'pt') {
+    const textos = {
+        pt: {
+            conforto: "✅ CONFORTO HÍDRICO: A planta está bem hidratada.",
+            confortoRec: "Continue monitorando. Condições favoráveis.",
+            alerta: "⚠️ ALERTA: A planta começa a sentir sede.",
+            alertaRec: "Programe irrigação para as próximas 24-48 horas.",
+            critico: "🔴 CRÍTICO: Estresse hídrico severo!",
+            criticoRec: "IRRIGUE IMEDIATAMENTE! A polinização pode ser comprometida.",
+            emergencia: "🚨 EMERGÊNCIA: Dano hídrico grave!",
+            emergenciaRec: "IRRIGAÇÃO DE URGÊNCIA. Avalie danos na lavoura."
+        },
+        en: {
+            conforto: "✅ WATER COMFORT: Plant is well hydrated.",
+            confortoRec: "Keep monitoring. Favorable conditions.",
+            alerta: "⚠️ ALERT: Plant begins to feel thirsty.",
+            alertaRec: "Schedule irrigation for the next 24-48 hours.",
+            critico: "🔴 CRITICAL: Severe water stress!",
+            criticoRec: "IRRIGATE IMMEDIATELY! Pollination may be compromised.",
+            emergencia: "🚨 EMERGENCY: Severe water damage!",
+            emergenciaRec: "URGENT IRRIGATION. Assess crop damage."
+        },
+        es: {
+            conforto: "✅ CONFORT HÍDRICO: La planta está bien hidratada.",
+            confortoRec: "Continúe monitoreando. Condiciones favorables.",
+            alerta: "⚠️ ALERTA: La planta comienza a tener sed.",
+            alertaRec: "Programe riego para las próximas 24-48 horas.",
+            critico: "🔴 CRÍTICO: ¡Estrés hídrico severo!",
+            criticoRec: "¡RIEGUE INMEDIATAMENTE! La polinización puede verse comprometida.",
+            emergencia: "🚨 EMERGENCIA: ¡Daño hídrico grave!",
+            emergenciaRec: "RIEGO DE URGENCIA. Evalúe daños en el cultivo."
+        }
+    };
+    
+    const t = textos[idioma] || textos.pt;
+    
     if (potencial > -0.5) {
-        return {
-            mensagem: "✅ CONFORTO HÍDRICO: A planta está bem hidratada.",
-            recomendacao: "Continue monitorando. Condições favoráveis."
-        };
+        return { mensagem: t.conforto, recomendacao: t.confortoRec };
     } else if (potencial > -0.9) {
-        return {
-            mensagem: "⚠️ ALERTA: A planta começa a sentir sede.",
-            recomendacao: "Programe irrigação para as próximas 24-48 horas."
-        };
+        return { mensagem: t.alerta, recomendacao: t.alertaRec };
     } else if (potencial > -1.4) {
-        return {
-            mensagem: "🔴 CRÍTICO: Estresse hídrico severo!",
-            recomendacao: "IRRIGUE IMEDIATAMENTE! A polinização pode ser comprometida."
-        };
+        return { mensagem: t.critico, recomendacao: t.criticoRec };
     } else {
-        return {
-            mensagem: "🚨 EMERGÊNCIA: Dano hídrico grave!",
-            recomendacao: "IRRIGAÇÃO DE URGÊNCIA. Avalie danos na lavoura."
-        };
+        return { mensagem: t.emergencia, recomendacao: t.emergenciaRec };
     }
 }
 
-// 5. Função principal que atualiza tudo na tela
-function atualizarApp() {
-    let culturaEscolhida = document.getElementById('cultura').value;
-    let estadioEscolhido = document.getElementById('estadio').value;
-    let diasChuva = parseInt(document.getElementById('chuva').value);
-    
-    let clima = gerarDadosFake();
-    let temperatura = clima.temp;
-    let umidade = clima.umid;
-    
-    document.getElementById('temp').innerText = temperatura;
-    document.getElementById('umidade').innerText = umidade;
-    
-    let vpd = calcularVPD(temperatura, umidade);
-    document.getElementById('vpdValor').innerText = vpd + " kPa";
-    
-    let potencial = estimarPotencial(vpd, culturaEscolhida, estadioEscolhido, diasChuva);
-    document.getElementById('potencialValor').innerText = potencial + " MPa";
-    
-    let alerta = gerarAlerta(potencial);
-    
-    let alertaBox = document.getElementById('alertaBox');
-    alertaBox.innerHTML = `
-        <p style="font-weight: bold;">${alerta.mensagem}</p>
-        <p>💡 RECOMENDAÇÃO: ${alerta.recomendacao}</p>
-    `;
-    
-    // Muda a cor da caixa de alerta
-    if (potencial > -0.5) {
-        alertaBox.style.background = "#d4edda";
-        alertaBox.style.borderLeftColor = "#28a745";
-    } else if (potencial > -0.9) {
-        alertaBox.style.background = "#fff3cd";
-        alertaBox.style.borderLeftColor = "#ffc107";
-    } else {
-        alertaBox.style.background = "#f8d7da";
-        alertaBox.style.borderLeftColor = "#dc3545";
-    }
-}
+// ============================================
+// 5. GEOLOCALIZAÇÃO E CLIMA REAL
+// ============================================
 
-// 6. Configurar o botão e iniciar
-let botao = document.getElementById('botaoAtualizar');
-botao.addEventListener('click', atualizarApp);
-atualizarApp();
-// ============================================
-// GEOLOCALIZAÇÃO
-// ============================================
+let ultimaLatitude = null;
+let ultimaLongitude = null;
 
 function obterLocalizacao() {
     const statusElement = document.getElementById('statusLocalizacao');
     
     if (!navigator.geolocation) {
-        statusElement.innerHTML = "❌ Seu navegador não suporta geolocalização.";
+        if (statusElement) statusElement.innerHTML = "❌ Seu navegador não suporta geolocalização.";
         return;
     }
     
-    statusElement.innerHTML = "📍 Buscando sua localização...";
+    if (statusElement) statusElement.innerHTML = "📍 Buscando sua localização...";
     
     navigator.geolocation.getCurrentPosition(
-        // Sucesso - conseguiu a localização
         function(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
+            ultimaLatitude = position.coords.latitude;
+            ultimaLongitude = position.coords.longitude;
             
-            statusElement.innerHTML = `✅ Localização obtida! Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`;
+            if (statusElement) statusElement.innerHTML = `✅ Localização obtida!`;
             
-            // Salvar no app para usar nas buscas de clima
-            window.ultimaLatitude = latitude;
-            window.ultimaLongitude = longitude;
-            
-            // Atualizar o nome da localização (opcional - via geocoding)
-            atualizarNomeLocalizacao(latitude, longitude);
-            
-            // Buscar dados climáticos reais
-            buscarClimaReal(latitude, longitude);
+            buscarClimaReal(ultimaLatitude, ultimaLongitude);
         },
-        // Erro - usuário negou ou não conseguiu
         function(erro) {
             let mensagem = "";
             switch(erro.code) {
                 case erro.PERMISSION_DENIED:
                     mensagem = "❌ Você negou o acesso à localização.";
                     break;
-                case erro.POSITION_UNAVAILABLE:
-                    mensagem = "❌ Localização indisponível.";
-                    break;
-                case erro.TIMEOUT:
-                    mensagem = "❌ Tempo excedido.";
-                    break;
                 default:
-                    mensagem = "❌ Erro desconhecido.";
+                    mensagem = "❌ Erro ao obter localização. Usando dados simulados.";
             }
-            statusElement.innerHTML = mensagem;
+            if (statusElement) statusElement.innerHTML = mensagem;
+            
+            const climaFake = gerarDadosFake();
+            recalcularComDadosReais(climaFake.temp, climaFake.umid);
         }
     );
 }
 
-// Opcional: converter coordenadas em nome da cidade
-async function atualizarNomeLocalizacao(lat, lon) {
-    try {
-        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`);
-        const data = await response.json();
-        if (data.address) {
-            const cidade = data.address.city || data.address.town || data.address.village || "Localização";
-            const estado = data.address.state || "";
-            const localizacaoElement = document.getElementById('localizacao');
-            // Só atualizar se o elemento existir
-            if (localizacaoElement) {
-                localizacaoElement.innerHTML = `📍 ${cidade}, ${estado}`;
-            }
-        }
-    } catch (erro) {
-        console.log("Não foi possível obter o nome da cidade:", erro);
-    }
-}
-// ============================================
-// API DE CLIMA REAL (Open-Meteo)
-// ============================================
-
-// ============================================
-// API DE CLIMA REAL (CORRIGIDA)
-// ============================================
-
 async function buscarClimaReal(latitude, longitude) {
     const statusElement = document.getElementById('statusLocalizacao');
-    if (statusElement) {
-        statusElement.innerHTML = "🌤️ Buscando dados do clima...";
-    }
+    if (statusElement) statusElement.innerHTML = "🌤️ Buscando dados do clima...";
     
     try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
-        
         const response = await fetch(url);
         const dados = await response.json();
         
@@ -214,35 +166,29 @@ async function buscarClimaReal(latitude, longitude) {
             const temperatura = dados.current.temperature_2m;
             const umidade = dados.current.relative_humidity_2m;
             
-            // Atualizar a tela com dados reais
             document.getElementById('temp').innerText = temperatura;
             document.getElementById('umidade').innerText = umidade;
             
-            // Recalcular tudo com os dados reais (CALCULA O VPD DENTRO)
             recalcularComDadosReais(temperatura, umidade);
             
             if (statusElement) {
-                statusElement.innerHTML = "✅ Dados atualizados com sucesso!";
-                setTimeout(() => {
-                    if (statusElement) statusElement.innerHTML = "";
-                }, 3000);
+                statusElement.innerHTML = "✅ Dados atualizados!";
+                setTimeout(() => { if (statusElement) statusElement.innerHTML = ""; }, 3000);
             }
         }
     } catch (erro) {
         console.error("Erro ao buscar clima:", erro);
-        if (statusElement) {
-            statusElement.innerHTML = "❌ Erro ao buscar dados. Usando simulação.";
-        }
+        if (statusElement) statusElement.innerHTML = "❌ Erro. Usando simulação.";
         const climaFake = gerarDadosFake();
         recalcularComDadosReais(climaFake.temp, climaFake.umid);
     }
 }
 
-// Função que recalcula VPD e potencial com dados reais
 function recalcularComDadosReais(temperatura, umidade) {
     const culturaEscolhida = document.getElementById('cultura').value;
     const estadioEscolhido = document.getElementById('estadio').value;
     const diasChuva = parseInt(document.getElementById('chuva').value);
+    const idioma = idiomaAtual || 'pt';
     
     const vpd = calcularVPD(temperatura, umidade);
     document.getElementById('vpdValor').innerText = vpd + " kPa";
@@ -250,194 +196,33 @@ function recalcularComDadosReais(temperatura, umidade) {
     const potencial = estimarPotencial(vpd, culturaEscolhida, estadioEscolhido, diasChuva);
     document.getElementById('potencialValor').innerHTML = potencial + " MPa";
     
-    const alerta = gerarAlerta(potencial);
+    const alerta = gerarAlerta(potencial, idioma);
     const alertaBox = document.getElementById('alertaBox');
     if (alertaBox) {
-        alertaBox.innerHTML = `<p style="font-weight: bold;">${alerta.mensagem}</p><p>💡 RECOMENDAÇÃO: ${alerta.recomendacao}</p>`;
+        alertaBox.innerHTML = `<p style="font-weight: bold;">${alerta.mensagem}</p><p>💡 ${traducoes[idioma].recomendacao || 'RECOMENDAÇÃO'}: ${alerta.recomendacao}</p>`;
     }
     
-    // Salvar no histórico
     const culturaNome = document.getElementById('cultura').options[document.getElementById('cultura').selectedIndex]?.text || 'Desconhecida';
     const estadioNome = document.getElementById('estadio').options[document.getElementById('estadio').selectedIndex]?.text || 'Desconhecido';
     
-    if (typeof salvarMedicao === 'function') {
-        salvarMedicao({
-            temperatura: temperatura,
-            umidade: umidade,
-            vpd: vpd,
-            potencial: potencial,
-            cultura: culturaNome,
-            estadio: estadioNome
-        });
-    }
-}
-// ============================================
-// INICIALIZAÇÃO
-// ============================================
-
-// Configurar o botão de localização
-const botaoLocalizacao = document.getElementById('botaoLocalizacao');
-if (botaoLocalizacao) {
-    botaoLocalizacao.addEventListener('click', obterLocalizacao);
-}
-
-// Configurar o botão de atualização normal (agora usa dados reais ou simulados)
-const botaoAtualizar = document.getElementById('botaoAtualizar');
-if (botaoAtualizar) {
-    botaoAtualizar.addEventListener('click', function() {
-        if (window.ultimaLatitude && window.ultimaLongitude) {
-            // Se temos localização, busca dados reais
-            buscarClimaReal(window.ultimaLatitude, window.ultimaLongitude);
-        } else {
-            // Fallback: dados simulados
-            const climaFake = gerarDadosFake();
-            recalcularComDadosReais(climaFake.temp, climaFake.umid);
-        }
+    salvarMedicao({
+        temperatura: temperatura,
+        umidade: umidade,
+        vpd: vpd,
+        potencial: potencial,
+        cultura: culturaNome,
+        estadio: estadioNome
     });
 }
 
-// Tentar obter localização automaticamente ao abrir o app
-setTimeout(() => {
-    obterLocalizacao();
-}, 500);
 // ============================================
-// PREVISÃO DO TEMPO (próximos dias)
-// ============================================
-
-async function buscarPrevisao(latitude, longitude) {
-    try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=5`;
-        
-        const response = await fetch(url);
-        const dados = await response.json();
-        
-        if (dados && dados.daily) {
-            let previsaoHTML = '<div class="previsao-container"><h3>📅 Previsão para os próximos dias</h3><div class="previsao-dias">';
-            
-            for (let i = 0; i < dados.daily.time.length; i++) {
-                const data = new Date(dados.daily.time[i]);
-                const dia = data.toLocaleDateString('pt-BR', { weekday: 'short' });
-                const max = Math.round(dados.daily.temperature_2m_max[i]);
-                const min = Math.round(dados.daily.temperature_2m_min[i]);
-                const chuvaProb = dados.daily.precipitation_probability_max[i];
-                
-                previsaoHTML += `
-                    <div class="previsao-dia">
-                        <strong>${dia}</strong>
-                        <span>🌡️ ${min}°/${max}°</span>
-                        <span>☔ ${chuvaProb}%</span>
-                    </div>
-                `;
-            }
-            
-            previsaoHTML += '</div></div>';
-            
-            // Adicionar na tela (depois do alerta)
-            const alertaBox = document.getElementById('alertaBox');
-            if (!document.querySelector('.previsao-container')) {
-                alertaBox.insertAdjacentHTML('afterend', previsaoHTML);
-            }
-        }
-    } catch (erro) {
-        console.log("Erro ao buscar previsão:", erro);
-    }
-}
-
-// Chamar a previsão junto com o clima
-// Adicione esta linha dentro da função buscarClimaReal, após atualizar os dados:
-// buscarPrevisao(latitude, longitude);
-// ============================================
-// GRÁFICO DO HISTÓRICO
-// ============================================
-
-let graficoHistorico = null;
-
-function criarGrafico(medicoes) {
-    const canvas = document.getElementById('graficoHistorico');
-    if (!canvas) return;
-    
-    // Pegar as últimas 10 medições (ou todas se menos de 10)
-    const ultimasMedicoes = medicoes.slice(-10);
-    
-    const datas = ultimasMedicoes.map(m => {
-        const data = new Date(m.timestamp);
-        return data.toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    });
-    
-    const potenciais = ultimasMedicoes.map(m => m.potencial);
-    
-    // Destruir gráfico anterior se existir
-    if (graficoHistorico) {
-        graficoHistorico.destroy();
-    }
-    
-    // Criar novo gráfico
-    const ctx = canvas.getContext('2d');
-    graficoHistorico = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: datas,
-            datasets: [{
-                label: 'Potencial de Água (MPa)',
-                data: potenciais,
-                borderColor: '#3498db',
-                backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.3,
-                pointBackgroundColor: function(context) {
-                    const value = context.raw;
-                    if (value > -0.5) return '#28a745';
-                    if (value > -0.9) return '#ffc107';
-                    return '#dc3545';
-                },
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Potencial (MPa)',
-                        color: '#333'
-                    },
-                    grid: {
-                        color: '#ddd'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Data/Hora',
-                        color: '#333'
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Potencial: ${context.raw} MPa`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-// ============================================
-// BANCO DE DADOS (INDEXEDDB) - HISTÓRICO
+// 6. BANCO DE DADOS (INDEXEDDB)
 // ============================================
 
 let db = null;
 
-// Abrir ou criar o banco de dados
 function abrirBancoHistorico() {
-    const request = indexedDB.open('AguaFacilDB', 1);
+    const request = indexedDB.open('AguaFacilDB', 2);
     
     request.onerror = function(event) {
         console.log('Erro ao abrir banco:', event);
@@ -452,17 +237,16 @@ function abrirBancoHistorico() {
     request.onupgradeneeded = function(event) {
         const banco = event.target.result;
         if (!banco.objectStoreNames.contains('medicoes')) {
-            const store = banco.createObjectStore('medicoes', { keyPath: 'id', autoIncrement: true });
-            store.createIndex('data', 'data', { unique: false });
-            store.createIndex('potencial', 'potencial', { unique: false });
-            store.createIndex('timestamp', 'timestamp', { unique: false });
+            banco.createObjectStore('medicoes', { keyPath: 'id', autoIncrement: true });
         }
     };
 }
 
-// Salvar medição no banco
 function salvarMedicao(medicao) {
-    if (!db) return;
+    if (!db) {
+        console.log('Banco não disponível');
+        return;
+    }
     
     const transaction = db.transaction(['medicoes'], 'readwrite');
     const store = transaction.objectStore('medicoes');
@@ -479,15 +263,10 @@ function salvarMedicao(medicao) {
         localizacao: document.getElementById('localizacao')?.innerText || 'Desconhecida'
     };
     
-    const request = store.add(dados);
-    
-    request.onsuccess = function() {
-        console.log('Medição salva!');
-        carregarHistorico();
-    };
+    store.add(dados);
+    transaction.oncomplete = () => carregarHistorico();
 }
 
-// Carregar histórico do banco
 function carregarHistorico() {
     if (!db) return;
     
@@ -497,74 +276,161 @@ function carregarHistorico() {
     
     request.onsuccess = function(event) {
         const medicoes = event.target.result;
-        // Ordenar por timestamp (mais recente primeiro)
         medicoes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        exibirHistorico(medicoes.slice(0, 20)); // Últimas 20
+        exibirHistorico(medicoes.slice(0, 20));
+        criarGrafico(medicoes.slice(0, 10).reverse());
     };
 }
 
-// Limpar todo o histórico
 function limparHistorico() {
     if (!db) return;
-    
     if (confirm('Tem certeza? Isso apagará todo o histórico.')) {
         const transaction = db.transaction(['medicoes'], 'readwrite');
         const store = transaction.objectStore('medicoes');
-        const request = store.clear();
-        
-        request.onsuccess = function() {
-            console.log('Histórico limpo!');
-            carregarHistorico();
-        };
+        store.clear();
+        transaction.oncomplete = () => carregarHistorico();
     }
 }
 
-// Salvar medição atual (chamar depois de cada atualização)
-function salvarMedicaoAtual(temperatura, umidade, vpd, potencial) {
-    const culturaSelect = document.getElementById('cultura');
-    const estadioSelect = document.getElementById('estadio');
+// ============================================
+// 7. GRÁFICO
+// ============================================
+
+let graficoHistorico = null;
+
+function criarGrafico(medicoes) {
+    const canvas = document.getElementById('graficoHistorico');
+    if (!canvas) return;
     
-    const culturaNome = culturaSelect.options[culturaSelect.selectedIndex]?.text || 'Desconhecida';
-    const estadioNome = estadioSelect.options[estadioSelect.selectedIndex]?.text || 'Desconhecido';
+    if (medicoes.length === 0) {
+        if (graficoHistorico) graficoHistorico.destroy();
+        return;
+    }
     
-    salvarMedicao({
-        temperatura: temperatura,
-        umidade: umidade,
-        vpd: vpd,
-        potencial: potencial,
-        cultura: culturaNome,
-        estadio: estadioNome
+    const datas = medicoes.map(m => {
+        const data = new Date(m.timestamp);
+        return data.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    });
+    
+    const potenciais = medicoes.map(m => m.potencial);
+    
+    if (graficoHistorico) graficoHistorico.destroy();
+    
+    const ctx = canvas.getContext('2d');
+    graficoHistorico = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: datas,
+            datasets: [{
+                label: 'Potencial (MPa)',
+                data: potenciais,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: potenciais.map(p => p > -0.5 ? '#28a745' : (p > -0.9 ? '#ffc107' : '#dc3545')),
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: { y: { title: { display: true, text: 'MPa' } } }
+        }
     });
 }
 
-// Inicializar banco ao carregar
-abrirBancoHistorico();
 // ============================================
-// EXIBIR HISTÓRICO (VERSÃO SIMPLES)
+// 8. EXPORTAR CSV
+// ============================================
+
+function exportarParaCSV() {
+    if (!db) return;
+    
+    const transaction = db.transaction(['medicoes'], 'readonly');
+    const store = transaction.objectStore('medicoes');
+    const request = store.getAll();
+    
+    request.onsuccess = function(event) {
+        const medicoes = event.target.result;
+        if (medicoes.length === 0) {
+            alert('Nenhuma medição para exportar.');
+            return;
+        }
+        
+        let csvContent = "\uFEFFData;Temperatura(°C);Umidade(%);VPD(kPa);Potencial(MPa);Cultura;Estádio\n";
+        medicoes.forEach(med => {
+            csvContent += `"${med.data}";${med.temperatura};${med.umidade};${med.vpd};${med.potencial};"${med.cultura}";"${med.estadio}"\n`;
+        });
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute('download', `agua-facil-${new Date().toISOString().slice(0,19)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+}
+
+// ============================================
+// 9. TRADUÇÃO
+// ============================================
+
+const traducoes = {
+    pt: { recomendacao: "RECOMENDAÇÃO" },
+    en: { recomendacao: "RECOMMENDATION" },
+    es: { recomendacao: "RECOMENDACIÓN" }
+};
+
+let idiomaAtual = 'pt';
+
+function traduzirPagina() {
+    const texto = traducoes[idiomaAtual];
+    document.querySelectorAll('.rec-title').forEach(el => {
+        if (el) el.innerHTML = `💡 ${texto.recomendacao}`;
+    });
+}
+
+function mudarIdioma(idioma) {
+    idiomaAtual = idioma;
+    traduzirPagina();
+    document.querySelectorAll('.idioma-btn').forEach(btn => btn.classList.remove('ativo'));
+    document.getElementById(`btn${idioma.toUpperCase()}`).classList.add('ativo');
+    localStorage.setItem('idioma', idioma);
+    
+    if (typeof ultimaLatitude === 'number' && ultimaLongitude) {
+        buscarClimaReal(ultimaLatitude, ultimaLongitude);
+    } else {
+        const climaFake = gerarDadosFake();
+        recalcularComDadosReais(climaFake.temp, climaFake.umid);
+    }
+}
+
+// ============================================
+// 10. EXIBIR HISTÓRICO
 // ============================================
 
 function exibirHistorico(medicoes) {
-    console.log("Histórico carregado:", medicoes.length, "medições");
-    
+    const idioma = idiomaAtual;
     let historicoHTML = `
         <div class="historico-container">
             <h3>📋 Histórico de medições</h3>
     `;
     
     if (medicoes.length === 0) {
-        historicoHTML += '<p style="color: #999;">Nenhuma medição salva ainda. Clique em ATUALIZAR para começar.</p>';
+        historicoHTML += '<p style="color: #999;">Nenhuma medição salva ainda.</p>';
     } else {
         medicoes.forEach(med => {
             let corPotencial = med.potencial > -0.5 ? '#28a745' : (med.potencial > -0.9 ? '#ffc107' : '#dc3545');
             historicoHTML += `
                 <div class="historico-item">
-                    <div class="historico-data">${med.data || new Date(med.timestamp).toLocaleString()}</div>
-                    <div class="historico-dados">
-                        🌡️ ${med.temperatura}°C | 💨 ${med.umidade}% UR
-                    </div>
-                    <div class="historico-potencial" style="color: ${corPotencial}">
-                        💧 ${med.potencial} MPa
-                    </div>
+                    <div class="historico-data">${med.data}</div>
+                    <div class="historico-dados">🌡️ ${med.temperatura}°C | 💨 ${med.umidade}% UR</div>
+                    <div class="historico-potencial" style="color: ${corPotencial}">💧 ${med.potencial} MPa</div>
                     <div class="historico-cultura">${med.cultura} (${med.estadio})</div>
                 </div>
             `;
@@ -572,22 +438,49 @@ function exibirHistorico(medicoes) {
     }
     
     historicoHTML += `
-        <button id="btnLimparHistorico" class="btn-limpar">🗑️ Limpar histórico</button>
+        <div class="historico-botoes">
+            <button id="btnExportarCSV" class="btn-exportar">📎 Exportar CSV</button>
+            <button id="btnLimparHistorico" class="btn-limpar">🗑️ Limpar</button>
+        </div>
     </div>`;
     
-    // Adicionar na tela
     const alertaBox = document.getElementById('alertaBox');
     if (alertaBox) {
+        if (!document.querySelector('.grafico-container')) {
+            alertaBox.insertAdjacentHTML('afterend', '<div class="grafico-container"><h3>📊 Evolução do Potencial</h3><canvas id="graficoHistorico"></canvas></div>');
+        }
         if (!document.querySelector('.historico-container')) {
-            alertaBox.insertAdjacentHTML('afterend', historicoHTML);
+            document.querySelector('.grafico-container').insertAdjacentHTML('afterend', historicoHTML);
         } else {
             document.querySelector('.historico-container').outerHTML = historicoHTML;
         }
     }
     
-    // Configurar botão limpar
-    const btnLimpar = document.getElementById('btnLimparHistorico');
-    if (btnLimpar) {
-        btnLimpar.addEventListener('click', limparHistorico);
-    }
+    document.getElementById('btnExportarCSV')?.addEventListener('click', exportarParaCSV);
+    document.getElementById('btnLimparHistorico')?.addEventListener('click', limparHistorico);
 }
+
+// ============================================
+// 11. INICIALIZAÇÃO
+// ============================================
+
+document.getElementById('btnPt')?.addEventListener('click', () => mudarIdioma('pt'));
+document.getElementById('btnEn')?.addEventListener('click', () => mudarIdioma('en'));
+document.getElementById('btnEs')?.addEventListener('click', () => mudarIdioma('es'));
+
+document.getElementById('botaoAtualizar')?.addEventListener('click', () => {
+    if (ultimaLatitude && ultimaLongitude) {
+        buscarClimaReal(ultimaLatitude, ultimaLongitude);
+    } else {
+        const climaFake = gerarDadosFake();
+        recalcularComDadosReais(climaFake.temp, climaFake.umid);
+    }
+});
+
+document.getElementById('botaoLocalizacao')?.addEventListener('click', obterLocalizacao);
+
+const idiomaSalvo = localStorage.getItem('idioma');
+if (idiomaSalvo) idiomaAtual = idiomaSalvo;
+
+abrirBancoHistorico();
+setTimeout(() => obterLocalizacao(), 500);

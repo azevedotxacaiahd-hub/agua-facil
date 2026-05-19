@@ -165,3 +165,129 @@ button:active {
     font-size: 11px;
     margin: 2px 0;
 }
+/* Cabeçalho com idiomas */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.header-top h1 {
+    margin: 0;
+}
+
+/* Botões de idioma */
+.idiomas {
+    display: flex;
+    gap: 5px;
+}
+
+.idioma-btn {
+    background: #f0f0f0;
+    color: #333;
+    padding: 5px 12px;
+    border: none;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+}
+
+.idioma-btn.ativo {
+    background: #3498db;
+    color: white;
+}
+
+/* Container do gráfico */
+.grafico-container {
+    background: #f8f9fa;
+    border-radius: 20px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.grafico-container h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #2c3e50;
+}
+
+canvas {
+    max-height: 200px;
+    width: 100%;
+}
+
+/* Botões do histórico */
+.historico-botoes {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.btn-exportar {
+    background: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.btn-limpar {
+    background: #dc3545;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.btn-exportar:active, .btn-limpar:active {
+    transform: scale(0.98);
+}
+
+/* Container do histórico */
+.historico-container {
+    background: #f8f9fa;
+    border-radius: 20px;
+    padding: 16px;
+    margin-top: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.historico-item {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-left: 4px solid #3498db;
+}
+
+.historico-data {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.historico-dados {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.historico-potencial {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 6px 0;
+}
+
+.historico-cultura {
+    font-size: 12px;
+    color: #888;
+}

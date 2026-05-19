@@ -2,9 +2,11 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ÁguaFácil</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 </head>
 <body>
 
@@ -17,6 +19,17 @@
             <div class="localizacao-input">
     <label>📍 Cidade:</label>
     <input type="text" id="cidadeInput" value="Sua Cidade, UF" style="width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #ccc;">
+</div>
+<div class="header">
+    <div class="header-top">
+        <h1>💧 ÁguaFácil</h1>
+        <div class="idiomas">
+            <button id="btnPt" class="idioma-btn ativo">🇧🇷 PT</button>
+            <button id="btnEn" class="idioma-btn">🇺🇸 EN</button>
+            <button id="btnEs" class="idioma-btn">🇪🇸 ES</button>
+        </div>
+    </div>
+    <p id="localizacao">📍 Brasília, DF</p>
 </div>
 
         <!-- CARD DO CLIMA (onde mostra temperatura e umidade) -->
@@ -38,8 +51,13 @@
     <option value="soja">Soja</option>
     <option value="tomate">Tomate</option>
     <option value="cafe">Café</option>
+    <option value="abacaxi">Abacaxizeiro</option>
     <option value="laranja">Laranja</option>
     <option value="trigo">Trigo</option>
+    <option value="cana">Cana-de-açúcar</option>
+    <option value="eucalipto">Eucalipto</option>
+    <option value="algodao">Algodão</option>
+    <option value="batata">Batata</option>
 </select>
 
             <label>📈 Estádio:</label>
