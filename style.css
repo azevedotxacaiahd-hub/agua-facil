@@ -1,0 +1,167 @@
+/* Isso é um comentário. Não afeta o app, só explica */
+
+/* Deixa a página inteira com fundo bonito e centraliza tudo */
+body {
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* A caixa branca que contém todo o app */
+.app-container {
+    max-width: 450px;          /* Largura máxima parecida com celular */
+    margin: 0 auto;            /* Centraliza na tela */
+    background: white;         /* Fundo branco */
+    border-radius: 30px;       /* Bordas arredondadas */
+    padding: 20px;             /* Espaço interno */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);  /* Sombra */
+}
+
+/* Cabeçalho */
+.header {
+    text-align: center;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Card do clima - fundo azul gradiente */
+.weather-card {
+    background: linear-gradient(135deg, #3498db, #2c3e50);
+    color: white;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Configurações (os selects) */
+.config {
+    background: #f0f0f0;
+    padding: 15px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+
+.config label {
+    display: block;        /* Cada label em sua própria linha */
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.config select {
+    width: 100%;           /* Ocupa toda largura */
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+/* Resultados */
+.resultados {
+    background: #1a1a2e;
+    color: white;
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#vpdValor, #potencialValor {
+    font-size: 48px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+/* Alerta */
+.alerta {
+    background: #fff3cd;
+    border-left: 5px solid #ffc107;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+/* Botão */
+button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* Efeito quando clica no botão */
+button:active {
+    transform: scale(0.98);
+}
+
+/* Rodapé */
+.rodape {
+    text-align: center;
+    font-size: 12px;
+    color: #999;
+}
+.btn-localizacao {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: white;
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.btn-localizacao:active {
+    transform: scale(0.98);
+}
+.previsao-container {
+    background: #e8f4fd;
+    border-radius: 20px;
+    padding: 16px;
+    margin-top: 20px;
+}
+
+.previsao-container h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    color: #2c3e50;
+}
+
+.previsao-dias {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.previsao-dia {
+    background: white;
+    padding: 8px;
+    border-radius: 12px;
+    text-align: center;
+    flex: 1;
+    min-width: 60px;
+    font-size: 12px;
+}
+
+.previsao-dia strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.previsao-dia span {
+    display: block;
+    font-size: 11px;
+    margin: 2px 0;
+}

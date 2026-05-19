@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÁguaFácil</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Tudo que o usuário vê fica dentro do body -->
+    <div class="app-container">
+        
+        <!-- CABEÇALHO -->
+        <div class="header">
+            <h1>💧 ÁguaFácil</h1>
+            <div class="localizacao-input">
+    <label>📍 Cidade:</label>
+    <input type="text" id="cidadeInput" value="Sua Cidade, UF" style="width: 100%; padding: 8px; border-radius: 10px; border: 1px solid #ccc;">
+</div>
+
+        <!-- CARD DO CLIMA (onde mostra temperatura e umidade) -->
+        <div class="weather-card">
+            <p>🌡️ Temperatura: <span id="temp">--</span> °C</p>
+            <p>💨 Umidade: <span id="umidade">--</span> %</p>
+        </div>
+
+        <!-- OPÇÕES QUE O USUÁRIO ESCOLHE -->
+        <!-- Botão de localização -->
+<div class="localizacao-section">
+    <button id="botaoLocalizacao" class="btn-localizacao">📍 Usar minha localização</button>
+    <p id="statusLocalizacao" style="font-size: 12px; margin-top: 8px; color: #666;"></p>
+</div>
+<div class="config">
+            <label>🌽 Cultura:</label>
+            <select id="cultura">
+    <option value="milho">Milho</option>
+    <option value="soja">Soja</option>
+    <option value="tomate">Tomate</option>
+    <option value="cafe">Café</option>
+    <option value="laranja">Laranja</option>
+    <option value="trigo">Trigo</option>
+</select>
+
+            <label>📈 Estádio:</label>
+            <select id="estadio">
+                <option value="floracao">Floração</option>
+                <option value="vegetativo">Vegetativo</option>
+                <option value="frutificacao">Frutificação</option>
+            </select>
+
+            <label>☔ Última chuva:</label>
+            <select id="chuva">
+    <option value="0">Hoje</option>
+    <option value="1">1 dia atrás</option>
+    <option value="3">3 dias atrás</option>
+    <option value="5">5 dias atrás</option>
+    <option value="7">7 dias atrás</option>
+    <option value="15">15 dias atrás</option>
+    <option value="30">30 dias atrás</option>
+</select>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div class="resultados">
+            <h3>VPD (sede do ar):</h3>
+            <p id="vpdValor">--</p>
+
+            <h3>💧 Potencial de água na planta:</h3>
+            <p id="potencialValor">--</p>
+        </div>
+
+        <!-- ALERTA E RECOMENDAÇÃO -->
+        <div class="alerta" id="alertaBox">
+            <p id="alertaTexto">Aguardando medição...</p>
+        </div>
+
+        <!-- BOTÃO -->
+        <button id="botaoAtualizar">🔄 ATUALIZAR MEDIÇÃO</button>
+
+        <!-- RODAPÉ -->
+        <div class="rodape">
+            <p>Estimativa baseada em dados simulados</p>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
