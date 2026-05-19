@@ -194,6 +194,10 @@ async function atualizarNomeLocalizacao(lat, lon) {
 // API DE CLIMA REAL (Open-Meteo)
 // ============================================
 
+// ============================================
+// API DE CLIMA REAL (CORRIGIDA)
+// ============================================
+
 async function buscarClimaReal(latitude, longitude) {
     const statusElement = document.getElementById('statusLocalizacao');
     if (statusElement) {
@@ -201,7 +205,6 @@ async function buscarClimaReal(latitude, longitude) {
     }
     
     try {
-        // URL da API Open-Meteo - dados atuais
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m&timezone=auto`;
         
         const response = await fetch(url);
@@ -215,7 +218,7 @@ async function buscarClimaReal(latitude, longitude) {
             document.getElementById('temp').innerText = temperatura;
             document.getElementById('umidade').innerText = umidade;
             
-            // Recalcular tudo com os dados reais
+            // Recalcular tudo com os dados reais (CALCULA O VPD DENTRO)
             recalcularComDadosReais(temperatura, umidade);
             
             if (statusElement) {
@@ -230,7 +233,6 @@ async function buscarClimaReal(latitude, longitude) {
         if (statusElement) {
             statusElement.innerHTML = "❌ Erro ao buscar dados. Usando simulação.";
         }
-        // Fallback: usar dados aleatórios se a API falhar
         const climaFake = gerarDadosFake();
         recalcularComDadosReais(climaFake.temp, climaFake.umid);
     }
@@ -238,34 +240,35 @@ async function buscarClimaReal(latitude, longitude) {
 
 // Função que recalcula VPD e potencial com dados reais
 function recalcularComDadosReais(temperatura, umidade) {
-    // 1. Obter valores dos selects
     const culturaEscolhida = document.getElementById('cultura').value;
     const estadioEscolhido = document.getElementById('estadio').value;
     const diasChuva = parseInt(document.getElementById('chuva').value);
     
-    // 2. Calcular VPD
     const vpd = calcularVPD(temperatura, umidade);
     document.getElementById('vpdValor').innerText = vpd + " kPa";
     
-    // 3. Calcular potencial
     const potencial = estimarPotencial(vpd, culturaEscolhida, estadioEscolhido, diasChuva);
     document.getElementById('potencialValor').innerHTML = potencial + " MPa";
     
-    // 4. Gerar alerta
     const alerta = gerarAlerta(potencial);
     const alertaBox = document.getElementById('alertaBox');
-    alertaBox.innerHTML = `<p style="font-weight: bold;">${alerta.mensagem}</p><p>💡 RECOMENDAÇÃO: ${alerta.recomendacao}</p>`;
+    if (alertaBox) {
+        alertaBox.innerHTML = `<p style="font-weight: bold;">${alerta.mensagem}</p><p>💡 RECOMENDAÇÃO: ${alerta.recomendacao}</p>`;
+    }
     
-    // 5. Ajustar cor do alerta
-    if (potencial > -0.5) {
-        alertaBox.style.background = "#d4edda";
-        alertaBox.style.borderLeftColor = "#28a745";
-    } else if (potencial > -0.9) {
-        alertaBox.style.background = "#fff3cd";
-        alertaBox.style.borderLeftColor = "#ffc107";
-    } else {
-        alertaBox.style.background = "#f8d7da";
-        alertaBox.style.borderLeftColor = "#dc3545";
+    // Salvar no histórico
+    const culturaNome = document.getElementById('cultura').options[document.getElementById('cultura').selectedIndex]?.text || 'Desconhecida';
+    const estadioNome = document.getElementById('estadio').options[document.getElementById('estadio').selectedIndex]?.text || 'Desconhecido';
+    
+    if (typeof salvarMedicao === 'function') {
+        salvarMedicao({
+            temperatura: temperatura,
+            umidade: umidade,
+            vpd: vpd,
+            potencial: potencial,
+            cultura: culturaNome,
+            estadio: estadioNome
+        });
     }
 }
 // ============================================
@@ -343,3 +346,248 @@ async function buscarPrevisao(latitude, longitude) {
 // Chamar a previsão junto com o clima
 // Adicione esta linha dentro da função buscarClimaReal, após atualizar os dados:
 // buscarPrevisao(latitude, longitude);
+// ============================================
+// GRÁFICO DO HISTÓRICO
+// ============================================
+
+let graficoHistorico = null;
+
+function criarGrafico(medicoes) {
+    const canvas = document.getElementById('graficoHistorico');
+    if (!canvas) return;
+    
+    // Pegar as últimas 10 medições (ou todas se menos de 10)
+    const ultimasMedicoes = medicoes.slice(-10);
+    
+    const datas = ultimasMedicoes.map(m => {
+        const data = new Date(m.timestamp);
+        return data.toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    });
+    
+    const potenciais = ultimasMedicoes.map(m => m.potencial);
+    
+    // Destruir gráfico anterior se existir
+    if (graficoHistorico) {
+        graficoHistorico.destroy();
+    }
+    
+    // Criar novo gráfico
+    const ctx = canvas.getContext('2d');
+    graficoHistorico = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: datas,
+            datasets: [{
+                label: 'Potencial de Água (MPa)',
+                data: potenciais,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: function(context) {
+                    const value = context.raw;
+                    if (value > -0.5) return '#28a745';
+                    if (value > -0.9) return '#ffc107';
+                    return '#dc3545';
+                },
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Potencial (MPa)',
+                        color: '#333'
+                    },
+                    grid: {
+                        color: '#ddd'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Data/Hora',
+                        color: '#333'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Potencial: ${context.raw} MPa`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+// ============================================
+// BANCO DE DADOS (INDEXEDDB) - HISTÓRICO
+// ============================================
+
+let db = null;
+
+// Abrir ou criar o banco de dados
+function abrirBancoHistorico() {
+    const request = indexedDB.open('AguaFacilDB', 1);
+    
+    request.onerror = function(event) {
+        console.log('Erro ao abrir banco:', event);
+    };
+    
+    request.onsuccess = function(event) {
+        db = event.target.result;
+        console.log('Banco de dados aberto!');
+        carregarHistorico();
+    };
+    
+    request.onupgradeneeded = function(event) {
+        const banco = event.target.result;
+        if (!banco.objectStoreNames.contains('medicoes')) {
+            const store = banco.createObjectStore('medicoes', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('data', 'data', { unique: false });
+            store.createIndex('potencial', 'potencial', { unique: false });
+            store.createIndex('timestamp', 'timestamp', { unique: false });
+        }
+    };
+}
+
+// Salvar medição no banco
+function salvarMedicao(medicao) {
+    if (!db) return;
+    
+    const transaction = db.transaction(['medicoes'], 'readwrite');
+    const store = transaction.objectStore('medicoes');
+    
+    const dados = {
+        timestamp: new Date().toISOString(),
+        data: new Date().toLocaleString('pt-BR'),
+        temperatura: medicao.temperatura,
+        umidade: medicao.umidade,
+        vpd: medicao.vpd,
+        potencial: medicao.potencial,
+        cultura: medicao.cultura,
+        estadio: medicao.estadio,
+        localizacao: document.getElementById('localizacao')?.innerText || 'Desconhecida'
+    };
+    
+    const request = store.add(dados);
+    
+    request.onsuccess = function() {
+        console.log('Medição salva!');
+        carregarHistorico();
+    };
+}
+
+// Carregar histórico do banco
+function carregarHistorico() {
+    if (!db) return;
+    
+    const transaction = db.transaction(['medicoes'], 'readonly');
+    const store = transaction.objectStore('medicoes');
+    const request = store.getAll();
+    
+    request.onsuccess = function(event) {
+        const medicoes = event.target.result;
+        // Ordenar por timestamp (mais recente primeiro)
+        medicoes.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        exibirHistorico(medicoes.slice(0, 20)); // Últimas 20
+    };
+}
+
+// Limpar todo o histórico
+function limparHistorico() {
+    if (!db) return;
+    
+    if (confirm('Tem certeza? Isso apagará todo o histórico.')) {
+        const transaction = db.transaction(['medicoes'], 'readwrite');
+        const store = transaction.objectStore('medicoes');
+        const request = store.clear();
+        
+        request.onsuccess = function() {
+            console.log('Histórico limpo!');
+            carregarHistorico();
+        };
+    }
+}
+
+// Salvar medição atual (chamar depois de cada atualização)
+function salvarMedicaoAtual(temperatura, umidade, vpd, potencial) {
+    const culturaSelect = document.getElementById('cultura');
+    const estadioSelect = document.getElementById('estadio');
+    
+    const culturaNome = culturaSelect.options[culturaSelect.selectedIndex]?.text || 'Desconhecida';
+    const estadioNome = estadioSelect.options[estadioSelect.selectedIndex]?.text || 'Desconhecido';
+    
+    salvarMedicao({
+        temperatura: temperatura,
+        umidade: umidade,
+        vpd: vpd,
+        potencial: potencial,
+        cultura: culturaNome,
+        estadio: estadioNome
+    });
+}
+
+// Inicializar banco ao carregar
+abrirBancoHistorico();
+// ============================================
+// EXIBIR HISTÓRICO (VERSÃO SIMPLES)
+// ============================================
+
+function exibirHistorico(medicoes) {
+    console.log("Histórico carregado:", medicoes.length, "medições");
+    
+    let historicoHTML = `
+        <div class="historico-container">
+            <h3>📋 Histórico de medições</h3>
+    `;
+    
+    if (medicoes.length === 0) {
+        historicoHTML += '<p style="color: #999;">Nenhuma medição salva ainda. Clique em ATUALIZAR para começar.</p>';
+    } else {
+        medicoes.forEach(med => {
+            let corPotencial = med.potencial > -0.5 ? '#28a745' : (med.potencial > -0.9 ? '#ffc107' : '#dc3545');
+            historicoHTML += `
+                <div class="historico-item">
+                    <div class="historico-data">${med.data || new Date(med.timestamp).toLocaleString()}</div>
+                    <div class="historico-dados">
+                        🌡️ ${med.temperatura}°C | 💨 ${med.umidade}% UR
+                    </div>
+                    <div class="historico-potencial" style="color: ${corPotencial}">
+                        💧 ${med.potencial} MPa
+                    </div>
+                    <div class="historico-cultura">${med.cultura} (${med.estadio})</div>
+                </div>
+            `;
+        });
+    }
+    
+    historicoHTML += `
+        <button id="btnLimparHistorico" class="btn-limpar">🗑️ Limpar histórico</button>
+    </div>`;
+    
+    // Adicionar na tela
+    const alertaBox = document.getElementById('alertaBox');
+    if (alertaBox) {
+        if (!document.querySelector('.historico-container')) {
+            alertaBox.insertAdjacentHTML('afterend', historicoHTML);
+        } else {
+            document.querySelector('.historico-container').outerHTML = historicoHTML;
+        }
+    }
+    
+    // Configurar botão limpar
+    const btnLimpar = document.getElementById('btnLimparHistorico');
+    if (btnLimpar) {
+        btnLimpar.addEventListener('click', limparHistorico);
+    }
+}
